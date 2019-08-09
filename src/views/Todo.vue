@@ -21,7 +21,7 @@
         />
         <label for="toggle-all">Mark all as complete</label>
       </template>
-      <List :list="list" @onDel="delItem" @onCheck="onCheck" />
+      <List :list="todos" @onDel="delItem" @onCheck="onCheck" />
     </section>
 
     <footer v-if="list.length > 0" class="footer">
@@ -137,6 +137,19 @@ export default {
     ...mapState({
       filter: state => state.app.filter
     }),
+    todos() {
+      if (this.filter === "active") {
+        return JSON.parse(
+          JSON.stringify(this.list.filter(item => item.completed === false))
+        );
+      } else if (this.filter === "completed") {
+        return JSON.parse(
+          JSON.stringify(this.list.filter(item => item.completed === true))
+        );
+      } else {
+        return JSON.parse(JSON.stringify(this.list));
+      }
+    },
     itemLeft() {
       let count = 0;
       this.list.forEach(item => {
