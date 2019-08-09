@@ -12,28 +12,43 @@
 
     <section class="main" style="display: block;">
       <template v-if="list.length > 0">
-        <input id="toggle-all" class="toggle-all" type="checkbox" />
+        <input
+          id="toggle-all"
+          class="toggle-all"
+          type="checkbox"
+          @click="onCheckAll"
+          :checked="isAllChecked"
+        />
         <label for="toggle-all">Mark all as complete</label>
       </template>
-      <List :list="list" @onDel="delItem" />
+      <List :list="list" @onDel="delItem" @onCheck="onCheck" />
     </section>
 
-    <footer v-if="list.length > 0" class="footer" style="display: block;">
+    <footer v-if="list.length > 0" class="footer">
       <span class="todo-count">
-        <strong>2</strong> items left
+        <strong>{{ itemLeft }}</strong>
+        {{ itemLeft > 1 ? 'items left': 'item left' }}
       </span>
       <ul class="filters">
         <li>
-          <a href="#/" class="selected">All</a>
+          <a href="#/" :class="{selected: filter === 'all'}" @click="onFilt('all')">All</a>
         </li>
         <li>
-          <a href="#/active">Active</a>
+          <a
+            href="#/active"
+            :class="{selected: filter === 'active'}"
+            @click="onFilt('active')"
+          >Active</a>
         </li>
         <li>
-          <a href="#/completed">Completed</a>
+          <a
+            href="#/completed"
+            :class="{selected: filter === 'completed'}"
+            @click="onFilt('completed')"
+          >Completed</a>
         </li>
       </ul>
-      <button class="clear-completed" style="display: block;">Clear completed</button>
+      <button class="clear-completed" @click="clearCompleted">Clear completed</button>
     </footer>
   </section>
 </template>
@@ -42,6 +57,7 @@
 import "./base.css";
 import "./common.css";
 import List from "../components/List.vue";
+import { mapState } from "vuex";
 
 let list = [
   {
@@ -91,6 +107,47 @@ export default {
     delItem(id) {
       let index = this.list.findIndex(item => item.id === id);
       this.list.splice(index, 1);
+    },
+    onCheck(id) {
+      let index = this.list.findIndex(item => item.id === id);
+      this.list[index].completed = !this.list[index].completed;
+      this.list = JSON.parse(JSON.stringify(this.list));
+    },
+    onCheckAll(e) {
+      let value = e.target.checked;
+      this.list.forEach(item => {
+        item.completed = value;
+      });
+      this.list = JSON.parse(JSON.stringify(this.list));
+    },
+    clearCompleted() {
+      this.list = this.list.filter(item => item.completed === false);
+    },
+    onFilt(value) {
+      if (value === "completed") {
+        this.$store.commit("SET_FILTER_TYPE", "completed");
+      } else if (value === "active") {
+        this.$store.commit("SET_FILTER_TYPE", "active");
+      } else {
+        this.$store.commit("SET_FILTER_TYPE", "all");
+      }
+    }
+  },
+  computed: {
+    ...mapState({
+      filter: state => state.app.filter
+    }),
+    itemLeft() {
+      let count = 0;
+      this.list.forEach(item => {
+        if (!item.completed) {
+          count++;
+        }
+      });
+      return count;
+    },
+    isAllChecked() {
+      return this.list.findIndex(item => item.completed === false) === -1;
     }
   }
 };
