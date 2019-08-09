@@ -21,13 +21,13 @@
         />
         <label for="toggle-all">Mark all as complete</label>
       </template>
-      <List :list="todos" @onDel="delItem" @onCheck="onCheck" />
+      <List :list="todos" @onDel="delItem" @onCheck="onCheck" @onUpdate="onUpdate"/>
     </section>
 
     <footer v-if="list.length > 0" class="footer">
       <span class="todo-count">
-        <strong>{{ itemLeft }}</strong>
-        {{ itemLeft > 1 ? 'items left': 'item left' }}
+        <strong>{{ unCompletedCount }}</strong>
+        {{ unCompletedCount > 1 ? 'items left': 'item left' }}
       </span>
       <ul class="filters">
         <li>
@@ -48,7 +48,7 @@
           >Completed</a>
         </li>
       </ul>
-      <button class="clear-completed" @click="clearCompleted">Clear completed</button>
+      <button v-if="completedCount > 0" class="clear-completed" @click="clearCompleted">Clear completed</button>
     </footer>
   </section>
 </template>
@@ -56,7 +56,7 @@
 <script>
 import "./base.css";
 import "./common.css";
-import List from "../components/List.vue";
+import List from "../../components/List.vue";
 import { mapState } from "vuex";
 
 let list = [
@@ -120,6 +120,11 @@ export default {
       });
       this.list = JSON.parse(JSON.stringify(this.list));
     },
+    onUpdate (id, value) {
+        let index = this.list.findIndex(item => item.id === id)
+        this.list[index].title = value
+        this.list = JSON.parse(JSON.stringify(this.list))
+    },
     clearCompleted() {
       this.list = this.list.filter(item => item.completed === false);
     },
@@ -150,7 +155,7 @@ export default {
         return JSON.parse(JSON.stringify(this.list));
       }
     },
-    itemLeft() {
+    unCompletedCount() {
       let count = 0;
       this.list.forEach(item => {
         if (!item.completed) {
@@ -158,6 +163,9 @@ export default {
         }
       });
       return count;
+    },
+    completedCount () {
+        return this.list.filter(item => item.completed === true).length
     },
     isAllChecked() {
       return this.list.findIndex(item => item.completed === false) === -1;

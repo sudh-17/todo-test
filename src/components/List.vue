@@ -1,18 +1,20 @@
 <template>
   <div>
-    <!-- <ul>
-            <li v-for="item in list" :key="item.id" >
-                <slot name="id" v-bind:id="item.id">{{item.id}}</slot>
-                <slot name="title" v-bind:title="item.name">{{item.name}}</slot>
-            </li>
-    </ul>-->
     <ul class="todo-list">
       <li v-for="item in list" :key="item.id">
         <div class="view">
           <input class="toggle" type="checkbox" :checked="item.completed" @click="onCheck(item.id)" />
-          <label>{{ item.title}}</label>
+          <label @dblclick="onEditing(item.id, item.title)">{{ item.title}}</label>
           <button class="destroy" @click="onDel(item.id)"></button>
         </div>
+        <input
+          type="text"
+          :ref="item.id"
+          class="edit"
+          :value="item.title"
+          @blur="(e) => onUpdate(e, item.id)"
+          @keyup.enter="(e) => onUpdate(e, item.id)"
+        />
       </li>
     </ul>
   </div>
@@ -24,12 +26,40 @@ export default {
   props: {
     list: Array
   },
+  data() {
+    return {
+      visible: false
+    };
+  },
   methods: {
     onDel(id) {
       this.$emit("onDel", id);
     },
     onCheck(id) {
       this.$emit("onCheck", id);
+    },
+    onEditing(id, value) {
+      Object.keys(this.$refs).forEach(key => {
+        if (this.$refs[key] && this.$refs[key].length > 0) {
+          let edit = this.$refs[key][0];
+          edit.style.display = "none";
+        }
+      });
+      let input = this.$refs[id][0];
+      input.style.display = "block";
+      input.value = value
+      input.focus();
+    },
+    onUpdate(e, id) {
+      let val = e.target.value;
+      if (!val || val.trim() === "") {
+        if (e.type === 'blur') {
+          e.target.style.display = "none";
+        }
+        return;
+      }
+      this.$emit("onUpdate", id, val);
+      e.target.style.display = "none";
     }
   }
 };
@@ -42,6 +72,12 @@ export default {
     color: #d9d9d9;
     text-decoration: line-through !important;
   }
+}
+.edit {
+  top: 6px;
+  position: absolute !important;
+  left: 48px;
+  width: 494px;
 }
 </style>
 

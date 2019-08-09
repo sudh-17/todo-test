@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import Todo from './views/Todo.vue'
+import Todo from './views/Home/Home.vue'
 
 export default {
   name: 'app',
