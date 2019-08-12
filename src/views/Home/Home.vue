@@ -21,7 +21,7 @@
         />
         <label for="toggle-all">Mark all as complete</label>
       </template>
-      <List :list="todos" @onDel="delItem" @onCheck="onCheck" @onUpdate="onUpdate"/>
+      <List :list="todos" @onDel="delItem" @onCheck="onCheck" @onUpdate="onUpdate" />
     </section>
 
     <footer v-if="list.length > 0" class="footer">
@@ -48,7 +48,11 @@
           >Completed</a>
         </li>
       </ul>
-      <button v-if="completedCount > 0" class="clear-completed" @click="clearCompleted">Clear completed</button>
+      <button
+        v-if="completedCount > 0"
+        class="clear-completed"
+        @click="clearCompleted"
+      >Clear completed</button>
     </footer>
   </section>
 </template>
@@ -58,38 +62,22 @@ import "./base.css";
 import "./common.css";
 import List from "../../components/List.vue";
 import { mapState } from "vuex";
+import { getAll, addTodo, deleteTodo, updateTodo } from "../../api/todo.js";
 
-let list = [
-  {
-    id: "1",
-    completed: false,
-    title: "ff1"
-  },
-  {
-    id: "2",
-    completed: false,
-    title: "ff2"
-  },
-  {
-    id: "3",
-    completed: false,
-    title: "ff3"
-  },
-  {
-    id: "4",
-    completed: false,
-    title: "ff4"
-  }
-];
 export default {
   name: "home",
   data() {
     return {
-      list
+      list: []
     };
   },
   components: {
     List
+  },
+  created() {
+    getAll().then(res => {
+      this.list = res.data;
+    });
   },
   methods: {
     addItem(e) {
@@ -97,21 +85,33 @@ export default {
       if (!val || val.trim() === "") {
         return;
       }
-      this.list.push({
-        id: new Date().getTime().toString(),
-        title: val,
-        completed: false
+      addTodo({ title: val }).then(res => {
+        if (res.status == 200) {
+          this.list.push(res.data);
+          e.target.value = "";
+        }
       });
-      e.target.value = "";
     },
     delItem(id) {
-      let index = this.list.findIndex(item => item.id === id);
-      this.list.splice(index, 1);
+      deleteTodo(id).then(res => {
+        if (res.status == 200) {
+          let removeId = res.data;
+          let index = this.list.findIndex(item => item.id === removeId);
+          this.list.splice(index, 1);
+        }
+      });
     },
-    onCheck(id) {
-      let index = this.list.findIndex(item => item.id === id);
-      this.list[index].completed = !this.list[index].completed;
-      this.list = JSON.parse(JSON.stringify(this.list));
+    onCheck(id, value) {
+      updateTodo({
+        id: id,
+        completed: value
+      }).then(res => {
+        if (res.status === 200) {
+          let index = this.list.findIndex(item => item.id === id);
+          this.list[index].completed = !this.list[index].completed;
+          this.list = JSON.parse(JSON.stringify(this.list));
+        }
+      });
     },
     onCheckAll(e) {
       let value = e.target.checked;
@@ -120,10 +120,17 @@ export default {
       });
       this.list = JSON.parse(JSON.stringify(this.list));
     },
-    onUpdate (id, value) {
-        let index = this.list.findIndex(item => item.id === id)
-        this.list[index].title = value
-        this.list = JSON.parse(JSON.stringify(this.list))
+    onUpdate(id, value) {
+      updateTodo({
+        id: id,
+        title: value
+      }).then(res => {
+        if (res.status === 200) {
+          let index = this.list.findIndex(item => item.id === id);
+          this.list[index].title = value;
+          this.list = JSON.parse(JSON.stringify(this.list));
+        }
+      });
     },
     clearCompleted() {
       this.list = this.list.filter(item => item.completed === false);
@@ -164,8 +171,8 @@ export default {
       });
       return count;
     },
-    completedCount () {
-        return this.list.filter(item => item.completed === true).length
+    completedCount() {
+      return this.list.filter(item => item.completed === true).length;
     },
     isAllChecked() {
       return this.list.findIndex(item => item.completed === false) === -1;

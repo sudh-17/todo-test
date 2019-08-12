@@ -3,7 +3,7 @@
     <ul class="todo-list">
       <li v-for="item in list" :key="item.id">
         <div class="view">
-          <input class="toggle" type="checkbox" :checked="item.completed" @click="onCheck(item.id)" />
+          <input class="toggle" type="checkbox" :checked="item.completed" @click="(e) => onCheck(e, item.id)" />
           <label @dblclick="onEditing(item.id, item.title)">{{ item.title}}</label>
           <button class="destroy" @click="onDel(item.id)"></button>
         </div>
@@ -35,8 +35,9 @@ export default {
     onDel(id) {
       this.$emit("onDel", id);
     },
-    onCheck(id) {
-      this.$emit("onCheck", id);
+    onCheck(e, id) {
+      let value = e.target.checked;
+      this.$emit("onCheck", id, value);
     },
     onEditing(id, value) {
       Object.keys(this.$refs).forEach(key => {
