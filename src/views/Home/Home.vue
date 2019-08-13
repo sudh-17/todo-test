@@ -62,7 +62,7 @@ import "./base.css";
 import "./common.css";
 import List from "../../components/List.vue";
 import { mapState } from "vuex";
-import { getAll, addTodo, deleteTodo, updateTodo } from "../../api/todo.js";
+import { getAll, addTodo, deleteTodo, updateTodo, completedAll, clearCompleted } from "../../api/todo.js";
 
 export default {
   name: "home",
@@ -108,17 +108,10 @@ export default {
       }).then(res => {
         if (res.status === 200) {
           let index = this.list.findIndex(item => item.id === id);
-          this.list[index].completed = !this.list[index].completed;
+          this.list[index].completed = value;
           this.list = JSON.parse(JSON.stringify(this.list));
         }
       });
-    },
-    onCheckAll(e) {
-      let value = e.target.checked;
-      this.list.forEach(item => {
-        item.completed = value;
-      });
-      this.list = JSON.parse(JSON.stringify(this.list));
     },
     onUpdate(id, value) {
       updateTodo({
@@ -132,8 +125,20 @@ export default {
         }
       });
     },
+    onCheckAll(e) {
+      let value = e.target.checked;
+      completedAll(value).then(res => {
+        if (res.status === 200) {
+          this.list = res.data
+        }
+      })
+    },
     clearCompleted() {
-      this.list = this.list.filter(item => item.completed === false);
+      clearCompleted().then(res => {
+        if (res.status === 200) {
+          this.list = res.data
+        }
+      })
     },
     onFilt(value) {
       if (value === "completed") {

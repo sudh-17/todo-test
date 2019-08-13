@@ -19,7 +19,6 @@ export function addTodo(params) {
 }
 
 export function deleteTodo(id) {
-  //return instance.delete(api.Delete+"/"+params.id);
   return instance({
     url: api.Delete + "/" + id,
     method: "delete"
@@ -27,11 +26,26 @@ export function deleteTodo(id) {
 }
 
 export function updateTodo(todo) {
-    //return instance.delete(api.Delete+"/"+params.id);
-    return instance({
-      url: api.Update,
-      method: "post",
-      data: todo
-    });
-  }
-  
+  return instance({
+    url: api.Update,
+    method: "post",
+    data: todo
+  });
+}
+
+export function completedAll(value) {
+  return instance({
+    url: api.IsCompletedAll,
+    method: "get",
+    params: {
+      completed: value
+    } 
+  });
+}
+
+export function clearCompleted() {
+  return instance({
+    url: api.ClearCompleted,
+    method: "get"
+  });
+}
